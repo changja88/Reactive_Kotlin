@@ -1,0 +1,19 @@
+
+
+
+* Subject 종류 설명
+1> PublishSubject
+- subscribe 한 시점 이후에 발생되는 이벤트만 전달 받는다
+
+
+2> AsyncSubject
+- 무조건 complete 되고 난 뒤 마지막 데이터를 전달 받는다
+
+
+3> BehaviorSubject
+- PublishSubject는 subscribe를 하기전에 발생한 데이터는 전달 받지 못하지만,
+  BehaviorSubject는 subscribe하게되면, subscribe 이전에 발생한 데이터라도 마지막 하는 전달 받을 수 있다
+
+
+4> ReplaySubject
+- 이벤트를 전부 캐싱하고 있따가, 새로운 subcriber가 생기면 한번에 전달한다

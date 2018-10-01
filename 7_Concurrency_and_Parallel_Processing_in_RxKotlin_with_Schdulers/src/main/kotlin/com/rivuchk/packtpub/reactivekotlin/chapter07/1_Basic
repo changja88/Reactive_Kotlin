@@ -1,0 +1,74 @@
+
+
+
+* Concurrency and Parallel Processing in RxKotlin with Schedulers
+- RxKotlin이 multi-thread 가 디폴트라고 생각하지만 single-thread가 디폴트이다
+- 배우게 될 내용
+    - Introduction to concurrency
+    - The subscribeOn() and observeOn() operator
+    - Paralleization
+
+- Introduction to concurrency
+    - As a programming paradign, concurrent computing is a form of modular programming,
+      namely factoring an overall computation into subcomputations that may be executed concurrently
+    - Concurrency 란 entrie task를 small parts로 나누는 과정이고,
+      executing them concurrently and parallel excution 하는 것이다
+    - execute subcomputations concurrently 란
+      배추를 자르면서 물을 끓이는 거고, 도우미를 추가하는 것은 쓰레드는 추가하는 것이고 도우미를 관리하는 메인 주방장은
+      메인 쓰레드 이다 (메인 주방장 has responsible person for the entire job)
+
+- Parallel execution versus concurrency
+    - Concurrency 와 parallelization 은 깊은 관련이 있다
+    - 거의 똑같다고 생각해도 되지만 차이점이 있다
+    - Paralleization 은 concurrency가 있어야만 달성 가능하며, concurrency를 어떻게 사용할 것인지에 대한 것이다
+    - Paralleization wisely divide tasks in a pool, instead of creating threads for each
+      task, create a pool of tasks, and assign them to an existing thread, and reuse them
+
+- What is a scheduler
+    - Observable을 subscribe하는 동안은 쓰레드가 멈춰있다 (observable마다 쓰레드가 따로 하나씩 붙는다면 그게 더 개망)
+      -> Observable will do the work on the same thread where subscirbe is called,
+         and the thread will be blocked until oberver receives the conComplte or onError notification
+    - scheduler and scheduling operators로 쓰레드를 관히 해야한다
+    - thread 간에는 shared data가 없기 때문에 FP 가 가능 하다 -> functional reactive programming 이 된다
+    - scheduler가 concurrency를 달성하게 해주는데 가장 큰 역할을 한다
+    - scheduler는 thread pool 이라고 생각 하면 된다
+
+- Type of scheduler
+    - 아래는 pre-compsed schduler이고 user-defined scheduler를 만들어 사용할 수도 있다
+    - Schedulers.io()
+        - I/O 작업을 하귀 위한 unbounded(제약없는)숫자의 쓰레드를 제공한다
+        - 이걸로 만들어지는 쓰레드들은 computationally 사용하는 것보다 I/O operation에 적합한 것들이다
+        - 즉, CPU 소비가 적고, I/O interaction을 오래 기달려 줄 수 있는 쓰레드 들이다
+        - 이거 진짜 말 그대로 제약없는 숫자의 쓰레드를 만들 수 있기 때문에 잘못 쓰면 OOM이 발생하게 된다
+        - 쓰레드 풀을 둘러보고, 놀고 있는 쓰레드가 있으면 그걸 사용하게 하고, 놀고 있는게 없으면 새로 만든다
+
+    - Schedulers.computation()
+        - 가장 유용한 스케줄러 이고, bounded(제약이있는) 쓰레드 풀을 제공한다
+        - CPU 코어 수 만큼 생성할 수 있다 -> 그래서 computationally한 작업을 하고 싶을 때 사용 하는 것이 좋다
+
+    - Schedulers.newThread()
+        - it creates a new thread for every request and forgets them forever
+        - 될수 있으면 computation이나 io 를 사용 하는 것을 추천 한다
+
+    - Schedulers.single()
+        - provides us with a scheduler that contains only on thread and returns the single
+          instance for every call
+        - 어떤 작업을 '순차적'으로 해야 할때 사용 하면 좋다
+
+    - Schedulers.trampoline()
+        - 이것도 어떤 작업을 '순차적'으로 해야 할때 사용 하면 좋다
+        - single을 작업이 순차적으로 진행 될것을 보장하지만,
+          it may run parallel to the thread it was called upon that thread is from
+
+    - Schedulers.from()
+        - 사용자 정의 쓰레드 만들때 사용 된다
+
+- How to use schedulers - subscribeOn and observeOn operators
+    - 스케쥴러를 구현하는 대는 두가지 operator가 있다 -> subscribeOn, observeOn
+
+- Observing on a different thread - observeOn operator
+    - subscirbeOn하면 쓰레드가 쉽게 갈아타져서 좋아 보이지만 좋지 않은 경우도 있다
+      -> computation 쓰레드에서 compute를 하고 io 쓰레드에서 display를 하고 싶은 경우
+      -> 즉, 복수개의 다른 쓰레드를 사용하고 싶으 경우
+      -> 동반 쓰레드가 필요하다 (companion thread)
+      -> 이럴때 observeOn을 사용한다
